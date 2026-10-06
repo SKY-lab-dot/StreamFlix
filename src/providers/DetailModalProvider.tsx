@@ -1,58 +1,58 @@
-import { ReactNode, useEffect, useState, useCallback } from "react";
-import { useLocation } from "react-router-dom";
-
-import { INITIAL_DETAIL_STATE } from "src/constant";
-import createSafeContext from "src/lib/createSafeContext";
-import { useLazyGetAppendedVideosQuery } from "src/store/slices/discover";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import { MEDIA_TYPE } from "src/types/Common";
-import { MovieDetail } from "src/types/Movie";
 
 interface DetailType {
-  id?: number;
-  mediaType?: MEDIA_TYPE;
-}
-export interface DetailModalConsumerProps {
-  detail: { mediaDetail?: MovieDetail } & DetailType;
-  setDetailType: (newDetailType: DetailType) => void;
+  mediaType: MEDIA_TYPE;
+  id: number;
 }
 
-export const [useDetailModal, Provider] =
-  createSafeContext<DetailModalConsumerProps>();
+interface DetailModalContextType {
+  detailType: DetailType | null;
+  setDetailType: (detailType: DetailType | null) => void;
+}
+
+const DetailModalContext = createContext<
+  DetailModalContextType | undefined
+>(undefined);
+
+interface DetailModalProviderProps {
+  children: ReactNode;
+}
 
 export default function DetailModalProvider({
   children,
-}: {
-  children: ReactNode;
-}) {
-  const location = useLocation();
-  const [detail, setDetail] = useState<
-    { mediaDetail?: MovieDetail } & DetailType
-  >(INITIAL_DETAIL_STATE);
+}: DetailModalProviderProps) {
+  const [detailType, setDetailType] = useState<DetailType | null>(null);
 
-  const [getAppendedVideos] = useLazyGetAppendedVideosQuery();
-
-  const handleChangeDetail = useCallback(
-    async (newDetailType: { mediaType?: MEDIA_TYPE; id?: number }) => {
-      if (!!newDetailType.id && newDetailType.mediaType) {
-        const response = await getAppendedVideos({
-          mediaType: newDetailType.mediaType,
-          id: newDetailType.id as number,
-        }).unwrap();
-        setDetail({ ...newDetailType, mediaDetail: response });
-      } else {
-        setDetail(INITIAL_DETAIL_STATE);
-      }
-    },
-    []
+  const value = useMemo(
+    () => ({
+      detailType,
+      setDetailType,
+    }),
+    [detailType]
   );
-
-  useEffect(() => {
-    setDetail(INITIAL_DETAIL_STATE);
-  }, [location.pathname, setDetail]);
 
   return (
-    <Provider value={{ detail, setDetailType: handleChangeDetail }}>
+    <DetailModalContext.Provider value={value}>
       {children}
-    </Provider>
+    </DetailModalContext.Provider>
   );
+}
+
+export function useDetailModal() {
+  const context = useContext(DetailModalContext);
+
+  if (!context) {
+    throw new Error(
+      "useDetailModal must be used within DetailModalProvider"
+    );
+  }
+
+  return context;
 }

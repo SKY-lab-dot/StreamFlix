@@ -1,7 +1,6 @@
 import { Stack } from "@mui/material";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
-import { SliderUnstyledOwnProps } from "@mui/base/SliderUnstyled";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import PlayerControlButton from "./PlayerControlButton";
@@ -10,27 +9,19 @@ const StyledSlider = styled(Slider)({
   height: 5,
   borderRadius: 0,
   padding: 0,
-  "& .NetflixSlider-track": {
+  color: "white",
+
+  "& .MuiSlider-track": {
     border: "none",
-    backgroundColor: "red",
   },
-  "& .NetflixSlider-rail": {
-    border: "none",
-    backgroundColor: "white",
-    opacity: 0.85,
+
+  "& .MuiSlider-thumb": {
+    width: 12,
+    height: 12,
   },
-  "& .NetflixSlider-thumb": {
-    height: 10,
-    width: 10,
-    backgroundColor: "red",
-    "&:focus, &:hover, &.Netflix-active, &.Netflix-focusVisible": {
-      boxShadow: "inherit",
-      height: 15,
-      width: 15,
-    },
-    "&:before": {
-      display: "none",
-    },
+
+  "& .MuiSlider-rail": {
+    opacity: 0.5,
   },
 });
 
@@ -41,7 +32,10 @@ export default function VolumeControllers({
   muted,
 }: {
   value: number;
-  handleVolume: SliderUnstyledOwnProps["onChange"];
+  handleVolume: (
+    event: Event,
+    value: number | number[]
+  ) => void;
   handleVolumeToggle: React.MouseEventHandler<HTMLButtonElement>;
   muted: boolean;
 }) {
@@ -49,23 +43,19 @@ export default function VolumeControllers({
     <Stack
       direction="row"
       alignItems="center"
-      spacing={{ xs: 0.5, sm: 1 }}
-      // sx={{
-      //   "&:hover NetflixSlider-root": {
-      //     display: "inline-block",
-      //   },
-      // }}
+      spacing={1}
     >
       <PlayerControlButton onClick={handleVolumeToggle}>
-        {!muted ? <VolumeUpIcon /> : <VolumeOffIcon />}
+        {muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
       </PlayerControlButton>
+
       <StyledSlider
+        value={muted ? 0 : value * 100}
+        min={0}
         max={100}
-        value={value * 100}
-        valueLabelDisplay="auto"
-        valueLabelFormat={(x: number) => x}
+        step={1}
         onChange={handleVolume}
-        sx={{ width: { xs: 60, sm: 80, md: 100 } }}
+        aria-label="Volume"
       />
     </Stack>
   );
